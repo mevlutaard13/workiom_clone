@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workiom Pro - Ultimate Multi-View</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-50 font-sans p-6">
+
+    <div class="max-w-6xl mx-auto">
+        
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">🚀 Workiom Gelişmiş Studio</h1>
+                <p class="text-sm text-gray-500">Aynı veritabanını Tablo, Kanban veya Form olarak kullanın.</p>
+            </div>
+            
+            <div class="bg-gray-200 p-1 rounded-xl flex gap-1 shadow-inner">
+                <button onclick="gorunumDegistir('tablo')" id="btnTabloGorunum" class="px-4 py-2 text-sm font-semibold rounded-lg bg-white text-gray-800 shadow-sm transition">
+                    📋 Tablo
+                </button>
+                <button onclick="gorunumDegistir('kanban')" id="btnKanbanGorunum" class="px-4 py-2 text-sm font-semibold rounded-lg text-gray-600 hover:text-gray-800 transition">
+                    🗂️ Kanban
+                </button>
+                <button onclick="gorunumDegistir('form')" id="btnFormGorunum" class="px-4 py-2 text-sm font-semibold rounded-lg text-gray-600 hover:text-gray-800 transition">
+                    ✍️ Müşteri Formu (Dış Link)
+                </button>
+            </div>
+        </div>
+
+        <div id="sutunSihirbazi" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-wrap items-center gap-3 mb-6">
+            <span class="text-xs font-bold text-gray-500 uppercase">Hızlı Sütun Ekle:</span>
+            <input type="text" id="yeniKolonAdi" placeholder="Kolon Adı (Örn: Telefon)" class="border p-2 text-sm rounded-lg bg-gray-50 outline-none focus:bg-white">
+            <select id="yeniKolonTipi" class="border p-2 text-sm rounded-lg bg-gray-50 outline-none">
+                <option value="text">Metin (Text)</option>
+                <option value="number">Sayı (Number)</option>
+            </select>
+            <button onclick="kolonEkle()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
+                ➕ Sütun Ekle
+            </button>
+        </div>
+
+        <div id="alanTabloGorunumu" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 text-left text-sm">
+                    <thead id="tabloBaslik" class="bg-gray-100 text-gray-700 font-bold uppercase tracking-wider text-xs"></thead>
+                    <tbody id="tabloGövde" class="divide-y divide-gray-200 bg-white text-gray-600"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="alanKanbanGorunumu" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"></div>
+
+        <div id="alanFormGorunumu" class="hidden max-w-xl mx-auto bg-white border border-gray-200 shadow-md rounded-2xl overflow-hidden mb-6">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+                <h2 class="text-xl font-bold">📋 Sipariş & Talep Giriş Formu</h2>
+                <p class="text-xs text-blue-100 mt-1">Bu formu müşterilerinize göndererek doğrudan tablonuza veri toplarsınız.</p>
+            </div>
+            <div id="paylasilabilirFormKutusu" class="p-6 space-y-4 bg-white">
+                </div>
+            <div class="p-6 bg-gray-50 border-t border-gray-100 flex justify-end">
+                <button onclick="formUzerindenKaydet()" class="bg-blue-600 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition shadow-md">
+                    Formu Gönder
+                </button>
+            </div>
+            <div id="formBasariMesaji" class="hidden p-4 bg-green-50 text-green-700 text-center text-sm font-semibold">
+                🎉 Harika! Bilgileriniz başarıyla alındı ve ana tabloya işlendi.
+            </div>
+        </div>
+
+        <div id="icVeriFormu" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h3 class="font-bold text-gray-800 mb-4 text-base">➕ Yeni Satır Verisi Girişi (İç Ekip)</h3>
+            <div id="dinamikFormGirişleri" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4"></div>
+            <button onclick="satirKaydet()" class="bg-green-600 text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-green-700 transition shadow-sm">
+                Veriyi Tabloya İşle
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api/tables/1';
+        let aktifKolonlar = [];
+        let mevcutGorunum = 'tablo';
+
+        // 3'lü Görünüm Değiştirici
+        function gorunumDegistir(tip) {
+            mevcutGorunum = tip;
+            const sekmeler = {
+                tablo: { btn: 'btnTabloGorunum', alan: 'alanTabloGorunumu' },
+                kanban: { btn: 'btnKanbanGorunum', alan: 'alanKanbanGorunumu' },
+                form: { btn: 'btnFormGorunum', alan: 'alanFormGorunumu' }
+            };
+
+            Object.keys(sekmeler).forEach(key => {
+                const btn = document.getElementById(sekmeler[key].btn);
+                const alan = document.getElementById(sekmeler[key].alan);
+                if (key === tip) {
+                    alan.classList.remove('hidden');
+                    btn.className = "px-4 py-2 text-sm font-semibold rounded-lg bg-white text-gray-800 shadow-sm transition";
+                } else {
+                    alan.classList.add('hidden');
+                    btn.className = "px-4 py-2 text-sm font-semibold rounded-lg text-gray-600 hover:text-gray-800 transition";
+                }
+            });
+
+            // Form görünümünde üstteki sihirbazı ve alttaki iç formu gizle (Müşteri ekranı gibi dursun)
+            const sih = document.getElementById('sutunSihirbazi');
+            const icForm = document.getElementById('icVeriFormu');
+            if (tip === 'form') {
+                sih.classList.add('hidden');
+                icForm.classList.add('hidden');
+            } else {
+                sih.classList.remove('hidden');
+                icForm.classList.remove('hidden');
+            }
+
+            tabloyuYukle();
+        }
+
+        // Ana Yükleme ve Çizim Motoru
+        async function tabloyuYukle() {
+            const schemaRes = await fetch(`${API_URL}/schema`);
+            const schemaData = await schemaRes.json();
+            aktifKolonlar = schemaData.schema_definition;
+
+            // 1. Tablo Başlıkları
+            const baslikAlan = document.getElementById('tabloBaslik');
+            let baslikHtml = `<tr>`;
+            aktifKolonlar.forEach(kolon => {
+                baslikHtml += `<th class="px-6 py-4 border-b border-gray-200 bg-gray-50">${kolon.name}</th>`;
+            });
+            baslikHtml += `</tr>`;
+            baslikAlan.innerHTML = baslikHtml;
+
+            // 2. İÇ PANEL FORMU ÇİZ
+            const formAlan = document.getElementById('dinamikFormGirişleri');
+            let formHtml = '';
+            aktifKolonlar.forEach(kolon => {
+                formHtml += `<div><label class="block text-xs font-bold text-gray-600 uppercase mb-1">${kolon.name}</label><input type="${kolon.type==='number'?'number':'text'}" id="form_${kolon.name}" class="border p-2.5 rounded-lg w-full text-sm bg-gray-50 outline-none"></div>`;
+            });
+            formAlan.innerHTML = formHtml;
+
+            // 3. DIŞ MÜŞTERİ FORMUNU ÇİZ (Sihir burası: Tablonun kolonlarına göre form üretiyor)
+            const disFormAlan = document.getElementById('paylasilabilirFormKutusu');
+            let disFormHtml = '';
+            aktifKolonlar.forEach(kolon => {
+                disFormHtml += `
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">${kolon.name} ${kolon.name === 'Müşteri' ? '<span class="text-red-500">*</span>':''}</label>
+                        <input type="${kolon.type==='number'?'number':'text'}" id="dis_form_${kolon.name}" placeholder="Lütfen giriş yapın..." class="border border-gray-300 p-3 rounded-xl w-full text-sm focus:ring-2 focus:ring-blue-500 outline-none transition shadow-sm">
+                    </div>`;
+            });
+            disFormAlan.innerHTML = disFormHtml;
+
+            // 4. Satır Verilerini Çek
+            const rowsRes = await fetch(`${API_URL}/rows`);
+            const rowsData = await rowsRes.json();
+            
+            // Tabloyu doldur
+            const govdeAlan = document.getElementById('tabloGövde');
+            let govdeHtml = '';
+            rowsData.forEach(satir => {
+                govdeHtml += `<tr class="hover:bg-gray-50">`;
+                aktifKolonlar.forEach(kolon => {
+                    govdeHtml += `<td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">${satir[kolon.name] !== undefined ? satir[kolon.name] : '-'}</td>`;
+                });
+                govdeHtml += `</tr>`;
+            });
+            govdeAlan.innerHTML = govdeHtml;
+
+            // Kanbanı doldur
+            const alanKanban = document.getElementById('alanKanbanGorunumu');
+            const asamalar = ["Normal", "Üretimde", "Kritik"];
+            let kanbanHtml = '';
+            asamalar.forEach(asama => {
+                const asamaSatirlari = rowsData.filter(r => r["Durum"] === asama || (asama === "Normal" && !r["Durum"]));
+                let kartlarHtml = '';
+                asamaSatirlari.forEach(satir => {
+                    let detaylarHtml = '';
+                    aktifKolonlar.forEach(kolon => {
+                        if(kolon.name !== 'Müşteri' && kolon.name !== 'Durum' && satir[kolon.name]) {
+                            detaylarHtml += `<p class="text-xs text-gray-500 mt-1"><strong>${kolon.name}:</strong> ${satir[kolon.name]}</p>`;
+                        }
+                    });
+                    kartlarHtml += `<div class="bg-white p-4 rounded-lg shadow-sm border border-gray-150 mb-3"><h4 class="font-bold text-gray-800 text-sm">${satir["Müşteri"] || 'İsimsiz'}</h4>${detaylarHtml}</div>`;
+                });
+                let renk = asama === 'Üretimde' ? 'bg-blue-50 text-blue-700 border-blue-200' : (asama === 'Kritik' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-gray-100 text-gray-700 border-gray-300');
+                kanbanHtml += `<div class="bg-gray-100 p-4 rounded-xl border border-gray-200 min-h-[300px]"><div class="flex justify-between items-center mb-4"><span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${renk} border">${asama}</span><span class="text-xs text-gray-400 font-bold">${asamaSatirlari.length} Kart</span></div><div>${kartlarHtml || '<p class="text-xs text-gray-400 text-center py-4 italic">Kart yok</p>'}</div></div>`;
+            });
+            alanKanban.innerHTML = kanbanHtml;
+        }
+
+        // Sütun Ekleme
+        async function kolonEkle() {
+            const name = document.getElementById('yeniKolonAdi').value;
+            const type = document.getElementById('yeniKolonTipi').value;
+            if(!name) return alert("Lütfen kolon adı girin!");
+            await fetch(`${API_URL}/columns`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ columnName: name, columnType: type }) });
+            document.getElementById('yeniKolonAdi').value = '';
+            tabloyuYukle();
+        }
+
+        // İç Panelden Satır Kaydetme
+        async function satirKaydet() {
+            let cells = {};
+            aktifKolonlar.forEach(kolon => { cells[kolon.name] = document.getElementById(`form_${kolon.name}`).value; });
+            await fetch(`${API_URL}/rows`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cells }) });
+            tabloyuYukle();
+        }
+
+        // DIŞ MÜŞTERİ FORMU ÜZERİNDEN KAYDETME
+        async function formUzerindenKaydet() {
+            let cells = {};
+            aktifKolonlar.forEach(kolon => {
+                cells[kolon.name] = document.getElementById(`dis_form_${kolon.name}`).value;
+            });
+
+            if(!cells["Müşteri"]) return alert("Müşteri alanı zorunludur!");
+
+            await fetch(`${API_URL}/rows`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cells })
+            });
+
+            // Formu temizle ve başarı mesajı göster
+            aktifKolonlar.forEach(kolon => { document.getElementById(`dis_form_${kolon.name}`).value = ''; });
+            const msg = document.getElementById('formBasariMesaji');
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 4000);
+            
+            tabloyuYukle();
+        }
+
+        tabloyuYukle();
+    </script>
+</body>
+</html>
