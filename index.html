@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workiom Pro - Ultimate Studio v6</title>
+    <title>Workiom Pro - Master Studio v7</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body id="anaGövde" class="bg-gray-100 font-sans p-6 transition-all duration-500 flex items-center justify-center min-h-screen">
 
@@ -23,10 +24,8 @@
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Şifre</label>
                 <input type="password" id="authSifre" placeholder="••••••••" class="border border-gray-300 p-3 rounded-xl w-full text-sm outline-none bg-gray-50 text-black">
             </div>
-            
             <button id="btnAuthAna" onclick="authIslemiYap()" class="w-full bg-blue-600 text-white p-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition shadow-md">Giriş Yap</button>
         </div>
-
         <div class="text-center mt-6 border-t border-gray-100 pt-4">
             <button id="btnAuthModDegis" onclick="authModuDegistir()" class="text-xs font-bold text-blue-600 hover:underline">Hesabınız yok mu? Yeni Hesap Oluşturun</button>
         </div>
@@ -34,13 +33,20 @@
 
     <div id="anaPanelKutusu" class="hidden max-w-6xl w-full mx-auto self-start">
         
+        <div id="canliMailUyarisi" class="hidden mb-4 p-4 bg-purple-600 text-white rounded-2xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-3 animate-pulse">
+            <div class="flex items-center gap-2 text-sm font-bold">
+                <span>⚡ [SİSTEM ALARMI] Gelişmiş Filtreli Otomasyon Tetiklendi ve Gerçek Mail Fırlatıldı!</span>
+            </div>
+            <a id="mailIncelemeLinki" href="#" target="_blank" class="bg-white text-purple-700 px-4 py-2 rounded-xl text-xs font-black hover:bg-purple-100 transition shadow-sm">📧 Fırlatılan Maili İncele (Gelen Kutusu)</a>
+        </div>
+
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <div>
                 <div class="flex items-center gap-2">
                     <h1 class="text-2xl font-bold text-gray-800">🚀 Workiom Pro Paneli</h1>
                     <span id="kullaniciRozeti" class="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-bold"></span>
                 </div>
-                <p class="text-sm text-gray-500">Arama, Filtreleme ve Excel Çıktısı Destekli Sistem.</p>
+                <p class="text-sm text-gray-500">Rozet, Otomasyon Takip ve Canlı Grafik Modüllü.</p>
             </div>
             
             <div class="flex items-center gap-3">
@@ -48,7 +54,7 @@
                     <button onclick="gorunumDegistir('tablo')" id="btnTabloGorunum" class="px-4 py-2 text-sm font-semibold rounded-lg bg-white text-gray-800 shadow-sm transition">📋 Tablo</button>
                     <button onclick="gorunumDegistir('kanban')" id="btnKanbanGorunum" class="px-4 py-2 text-sm font-semibold rounded-lg text-gray-600 hover:text-gray-800 transition">🗂️ Kanban</button>
                     <button onclick="gorunumDegistir('form')" id="btnFormGorunum" class="px-4 py-2 text-sm font-semibold rounded-lg text-gray-600 hover:text-gray-800 transition">✍️ Form</button>
-                    <button onclick="gorunumDegistir('rapor')" id="btnRaporGorunum" class="px-4 py-2 text-sm font-semibold rounded-lg text-gray-600 hover:text-gray-800 transition">📊 Rapor</button>
+                    <button onclick="gorunumDegistir('rapor')" id="btnRaporGorunum" class="px-4 py-2 text-sm font-semibold rounded-lg text-gray-600 hover:text-gray-800 transition">📊 Rapor & Grafikler</button>
                 </div>
                 <button onclick="cikisYap()" class="bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-red-700 transition">🔒 Çıkış</button>
             </div>
@@ -85,20 +91,23 @@
                     <div class="bg-red-100 p-3 rounded-xl text-xl">🚨</div>
                 </div>
             </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm max-w-md mx-auto">
+                <h4 class="font-bold text-gray-700 text-sm mb-4 text-center">📊 Sipariş Aşamaları Dağılım Grafiği</h4>
+                <div class="w-full h-64 flex justify-center">
+                    <canvas id="siparisPastaGrafigi"></canvas>
+                </div>
+            </div>
         </div>
 
         <div id="aramaVeAksiyonPaneli" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4 mb-4 text-black">
             <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                <input type="text" id="aramaGirdisi" oninput="filtreliTabloCiz()" placeholder="🔍 Tabloda canlı ara (Müşteri, iş vb.)..." class="border p-2.5 text-sm rounded-xl bg-gray-50 text-black outline-none w-full md:w-64">
-                
+                <input type="text" id="aramaGirdisi" oninput="filtreliTabloCiz()" placeholder="🔍 Tabloda canlı ara..." class="border p-2.5 text-sm rounded-xl bg-gray-50 text-black outline-none w-full md:w-64">
                 <button onclick="durumFiltresiSet('HEPSİ')" id="filterBtn_HEPSİ" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-gray-800 text-white transition">Her Şey</button>
                 <button onclick="durumFiltresiSet('Kritik')" id="filterBtn_Kritik" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition">🚨 Kritik</button>
                 <button onclick="durumFiltresiSet('Üretimde')" id="filterBtn_Üretimde" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition">⚙️ Üretimde</button>
             </div>
-            
-            <button onclick="excelDisaAktar()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-emerald-700 transition flex items-center gap-1 shadow-sm w-full md:w-auto justify-center">
-                📁 Excel / CSV Olarak İndir
-            </button>
+            <button onclick="excelDisaAktar()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-emerald-700 transition flex items-center gap-1 shadow-sm">📁 Excel / CSV Olarak İndir</button>
         </div>
 
         <div id="alanTabloGorunumu" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6 dynamic-card">
@@ -120,6 +129,18 @@
             </div>
         </div>
 
+        <div id="otomasyonPaneli" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6 dynamic-card text-black">
+            <h3 class="font-bold text-gray-800 mb-2 text-base flex items-center gap-2">⚡ Gelişmiş Filtreli Otomasyon Sihirbazı</h3>
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+                <div><label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Eğer Bu Kolon</label><input type="text" id="otoTriggerKolon" value="Durum" class="border p-2 text-xs rounded-lg w-full text-black bg-gray-50"></div>
+                <div><label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Şu Değerdeyse</label><input type="text" id="otoTriggerDeger" value="Kritik" class="border p-2 text-xs rounded-lg w-full text-black bg-gray-50"></div>
+                <div><label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">VE Şu Kolon (Sayı)</label><input type="text" id="otoCondKolon" value="Fiyat" class="border p-2 text-xs rounded-lg w-full text-black bg-gray-50"></div>
+                <div><label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Şundan Büyükse (>=)</label><input type="number" id="otoCondDeger" value="10000" class="border p-2 text-xs rounded-lg w-full text-black bg-gray-50"></div>
+                <div><label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Şu Maile Bildir</label><input type="email" id="otoPayload" value="remzi@example.com" class="border p-2 text-xs rounded-lg w-full text-black bg-gray-50"></div>
+            </div>
+            <button onclick="otomasyonEkle()" class="mt-4 bg-purple-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-purple-700 transition">⚡ Otomasyon Kuralını Zincirle</button>
+        </div>
+
         <div id="icVeriFormu" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 dynamic-card text-black">
             <h3 id="formBaslikYazi" class="font-bold mb-4 text-base">➕ Yeni Satır Verisi Girişi</h3>
             <div id="dinamikFormGirişleri" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4"></div>
@@ -135,11 +156,11 @@
         const API_URL = `${BASE_URL}/tables/1`;
         let authModu = 'login'; 
         let aktifKolonlar = [];
-        let hamSatirlarData = []; // Canlı filtreleme için tüm satırları burada tutacağız
+        let hamSatirlarData = []; 
         let aktifDurumFiltresi = 'HEPSİ';
         let düzenlenecekRowId = null;
+        let myChartInstance = null; // Grafik hafızası
 
-        // --- 🔐 AUTH MANTIĞI FONKSİYONLARI ---
         function authModuDegistir() {
             const baslik = document.getElementById('authBaslik');
             const altyazi = document.getElementById('authAltYazi');
@@ -174,9 +195,7 @@
                     body: JSON.stringify({ email, password })
                 });
                 const data = await res.json();
-                
                 if(!res.ok) return alert(data.error || "İşlem başarısız!");
-
                 alert(data.message);
                 if(authModu === 'register') {
                     authModuDegistir(); 
@@ -198,7 +217,6 @@
             document.getElementById('anaGövde').className = "bg-gray-100 font-sans p-6 transition-all duration-500 flex items-center justify-center min-h-screen";
         }
 
-        // --- PANEL MANTIĞI ---
         function gorunumDegistir(tip) {
             const sekmeler = {
                 tablo: { btn: 'btnTabloGorunum', alan: 'alanTabloGorunumu' },
@@ -223,11 +241,12 @@
             const icForm = document.getElementById('icVeriFormu');
             const tem = document.getElementById('temaPaneli');
             const araFltr = document.getElementById('aramaVeAksiyonPaneli');
+            const oto = document.getElementById('otomasyonPaneli');
             
             if (tip === 'form' || tip === 'rapor') {
-                [sih, icForm, tem, araFltr].forEach(el => el.classList.add('hidden'));
+                [sih, icForm, tem, araFltr, oto].forEach(el => el.classList.add('hidden'));
             } else {
-                [sih, icForm, tem, araFltr].forEach(el => el.classList.remove('hidden'));
+                [sih, icForm, tem, araFltr, oto].forEach(el => el.classList.remove('hidden'));
             }
             tabloyuYukle();
         }
@@ -243,11 +262,8 @@
             aktifDurumFiltresi = durum;
             ["HEPSİ", "Kritik", "Üretimde"].forEach(d => {
                 const btn = document.getElementById(`filterBtn_${d}`);
-                if(d === durum) {
-                    btn.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-gray-800 text-white transition";
-                } else {
-                    btn.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition";
-                }
+                if(d === durum) btn.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-gray-800 text-white transition";
+                else btn.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition";
             });
             filtreliTabloCiz();
         }
@@ -265,7 +281,7 @@
                 baslikHtml += `<th class="px-6 py-4 border-b border-gray-200 bg-gray-50 text-black font-bold uppercase text-xs text-right">Aksiyonlar</th></tr>`;
                 baslikAlan.innerHTML = baslikHtml;
 
-                // İç form girişlerini oluştur
+                // Form girişlerini oluştur
                 const formAlan = document.getElementById('dinamikFormGirişleri');
                 let formHtml = '';
                 aktifKolonlar.forEach(kolon => {
@@ -285,50 +301,76 @@
                 const rowsRes = await fetch(`${API_URL}/rows`);
                 hamSatirlarData = await rowsRes.json();
                 
-                // Rapor sayaçlarını hesapla
-                let toplamCiro = 0; let kritikSayisi = 0;
+                // Rapor ve Grafik Sayaçlarını hesapla
+                let toplamCiro = 0; let kritikSayisi = 0; let üretimdeSayisi = 0; let normalSayisi = 0;
                 hamSatirlarData.forEach(satir => {
                     if (satir["Fiyat"]) toplamCiro += Number(satir["Fiyat"]);
                     if (satir["Durum"] === "Kritik") kritikSayisi++;
+                    else if (satir["Durum"] === "Üretimde") üretimdeSayisi++;
+                    else normalSayisi++;
                 });
+
                 document.getElementById('statToplamSiparis').innerText = hamSatirlarData.length;
                 document.getElementById('statToplamCiro').innerText = toplamCiro.toLocaleString('tr-TR') + " TL";
                 document.getElementById('statKritikOran').innerText = hamSatirlarData.length > 0 ? Math.round((kritikSayisi / hamSatirlarData.length) * 100) + "%" : "0%";
 
+                // 📊 YENİ: CHART.JS PASTA GRAFİĞİNİ CANLI ÇİZ
+                const ctx = document.getElementById('siparisPastaGrafigi').getContext('2d');
+                if (myChartInstance) myChartInstance.destroy(); // Eski grafiği hafızadan sil
+                
+                myChartInstance = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Normal', 'Üretimde', 'Kritik'],
+                        datasets: [{
+                            data: [normalSayisi, üretimdeSayisi, kritikSayisi],
+                            backgroundColor: ['#e5e7eb', '#3b82f6', '#ef4444'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+
                 filtreliTabloCiz();
+                checkOtomasyonMailLog(); // Mail tetiklendi mi kontrol et
             } catch (e) { console.error(e); }
         }
 
-        // 🕵️ YENİ: HEM ARAMA HEM DURUM KOŞULUNA GÖRE TABLO VE KANBANI ÇİZEN MOTOR
+        // 🎨 YENİ: METİNLERİ RENKLİ ROZETLERE (BADGE) ÇEVİREN MERKEZİ MOTOR
+        function rozetUret(kolonAdi, deger) {
+            if (!deger || deger === '-') return '-';
+            if (kolonAdi === 'Durum') {
+                if (deger === 'Kritik') return `<span class="px-2.5 py-1 text-xs font-black bg-red-100 text-red-800 rounded-full border border-red-200">🚨 Kritik</span>`;
+                if (deger === 'Üretimde') return `<span class="px-2.5 py-1 text-xs font-black bg-blue-100 text-blue-800 rounded-full border border-blue-200">⚙️ Üretimde</span>`;
+                if (deger === 'Normal') return `<span class="px-2.5 py-1 text-xs font-black bg-gray-100 text-gray-700 rounded-full border border-gray-200">Normal</span>`;
+            }
+            if (kolonAdi === 'Fiyat') {
+                return `<span class="font-bold text-emerald-600">${Number(deger).toLocaleString('tr-TR')} TL</span>`;
+            }
+            return deger;
+        }
+
         function filtreliTabloCiz() {
             const aramaKelimesi = document.getElementById('aramaGirdisi').value.toLowerCase();
-            
-            // Filtreleme adımları
             let filtrelenmisSatirlar = hamSatirlarData.filter(satir => {
-                // 1. Durum Butonu Filtresi
-                if (aktifDurumFiltresi !== 'HEPSİ') {
-                    if (satir["Durum"] !== aktifDurumFiltresi) return false;
-                }
-                
-                // 2. Canlı Metin Arama Filtresi
+                if (aktifDurumFiltresi !== 'HEPSİ' && satir["Durum"] !== aktifDurumFiltresi) return false;
                 if (aramaKelimesi) {
                     let eslesmeVar = false;
                     aktifKolonlar.forEach(kolon => {
-                        const hucreDegeri = String(satir[kolon.name] || '').toLowerCase();
-                        if (hucreDegeri.includes(aramaKelimesi)) eslesmeVar = true;
+                        if (String(satir[kolon.name] || '').toLowerCase().includes(aramaKelimesi)) eslesmeVar = true;
                     });
                     return eslesmeVar;
                 }
                 return true;
             });
 
-            // 📋 Tabloyu Ekrana Bas
             const govdeAlan = document.getElementById('tabloGövde');
             let govdeHtml = '';
             filtrelenmisSatirlar.forEach(satir => {
                 govdeHtml += `<tr class="hover:bg-gray-100/50">`;
                 aktifKolonlar.forEach(kolon => {
-                    govdeHtml += `<td class="px-6 py-4 whitespace-nowrap font-medium text-inherit">${satir[kolon.name] !== undefined ? satir[kolon.name] : '-'}</td>`;
+                    // Güncelleme: Düz metin yerine rozetUret fonsiyonunu çağırıyoruz
+                    govdeHtml += `<td class="px-6 py-4 whitespace-nowrap font-medium text-inherit">${rozetUret(kolon.name, satir[kolon.name])}</td>`;
                 });
                 govdeHtml += `
                     <td class="px-6 py-4 whitespace-nowrap text-right text-xs font-medium space-x-2">
@@ -336,58 +378,33 @@
                         <button onclick="satirSil(${satir.row_id})" class="text-red-600 font-bold hover:underline">🗑️ Sil</button>
                     </td></tr>`;
             });
-            govdeAlan.innerHTML = govdeHtml || '<tr><td colspan="100" class="text-center py-6 text-gray-400 italic">Aranan kritere uygun veri bulunamadı.</td></tr>';
-
-            // 🗂️ Kanban'ı Güncelle
-            const alanKanban = document.getElementById('alanKanbanGorunumu');
-            const asamalar = ["Normal", "Üretimde", "Kritik"];
-            let kanbanHtml = '';
-            asamalar.forEach(asama => {
-                const asamaSatirlari = filtrelenmisSatirlar.filter(r => r["Durum"] === asama || (asama === "Normal" && !r["Durum"]));
-                let kartlarHtml = '';
-                asamaSatirlari.forEach(satir => {
-                    let detaylarHtml = '';
-                    aktifKolonlar.forEach(kolon => {
-                        if(kolon.name !== 'Müşteri' && kolon.name !== 'Durum' && satir[kolon.name]) {
-                            detaylarHtml += `<p class="text-xs text-gray-500 mt-1"><strong>${kolon.name}:</strong> ${satir[kolon.name]}</p>`;
-                        }
-                    });
-                    kartlarHtml += `<div class="bg-white p-4 rounded-lg shadow-sm border mb-3 text-black"><h4 class="font-bold text-sm">${satir["Müşteri"] || 'İsimsiz'}</h4>${detaylarHtml}</div>`;
-                });
-                let renk = asama === 'Üretimde' ? 'bg-blue-50 text-blue-700 border-blue-200' : (asama === 'Kritik' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-gray-100 text-gray-700 border-gray-300');
-                kanbanHtml += `<div class="bg-gray-100/80 p-4 rounded-xl border border-gray-200 min-h-[300px] text-black"><div class="flex justify-between items-center mb-4"><span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${renk} border">${asama}</span><span class="text-xs text-gray-400 font-bold">${asamaSatirlari.length} Kart</span></div><div>${kartlarHtml || '<p class="text-xs text-gray-400 text-center py-4 italic">Kart yok</p>'}</div></div>`;
-            });
-            alanKanban.innerHTML = kanbanHtml;
+            govdeAlan.innerHTML = govdeHtml || '<tr><td colspan="100" class="text-center py-6 text-gray-400 italic">Veri yok.</td></tr>';
         }
 
-        // 📁 YENİ: EXCEL / CSV OLARAK DIŞA AKTARMA MOTORU
+        // 💌 YENİ: ARKA PLANDA MAİL FIRLATILDI MI KONTROL EDEN MOTOR
+        async function checkOtomasyonMailLog() {
+            try {
+                const res = await fetch(`${BASE_URL}/automations/last-log`);
+                const data = await res.json();
+                const bar = document.getElementById('canliMailUyarisi');
+                if (data.url) {
+                    bar.classList.remove('hidden');
+                    document.getElementById('mailIncelemeLinki').href = data.url;
+                }
+            } catch(e){}
+        }
+
         function excelDisaAktar() {
-            if(hamSatirlarData.length === 0) return alert("Tabloda indirilecek veri yok!");
-            
-            // CSV başlık satırı
-            let csvIcerik = "\uFEFF"; // Türkçe karakterlerin Excel'de bozulmaması için BOM ekliyoruz
-            const kolonIsimleri = aktifKolonlar.map(k => k.name);
-            csvIcerik += kolonIsimleri.join(";") + "\n"; // Noktalı virgül Excel'in Türkiye ayarlarında doğrudan açılmasını sağlar
-
-            // Veri satırları
+            if(hamSatirlarData.length === 0) return alert("Veri yok!");
+            let csvIcerik = "\uFEFF";
+            csvIcerik += aktifKolonlar.map(k => k.name).join(";") + "\n";
             hamSatirlarData.forEach(satir => {
-                let satırHücreleri = aktifKolonlar.map(kolon => {
-                    let veri = String(satir[kolon.name] || '').replace(/"/g, '""'); // Tırnak işaretlerini kaçır
-                    return `"${veri}"`;
-                });
-                csvIcerik += satırHücreleri.join(";") + "\n";
+                csvIcerik += aktifKolonlar.map(kolon => `"${String(satir[kolon.name] || '').replace(/"/g, '""')}"`).join(";") + "\n";
             });
-
-            // Dosya indirme tetiklemesi
-            const blob = new Blob([csvIcerik], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", `S_Ponder_Siparis_Raporu_${new Date().toISOString().slice(0,10)}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
+            link.setAttribute("href", URL.createObjectURL(new Blob([csvIcerik], { type: 'text/csv;charset=utf-8;' })));
+            link.setAttribute("download", `S_Ponder_SaaS_Report.csv`);
             link.click();
-            document.body.removeChild(link);
         }
 
         async function satirSil(rowId) {
@@ -415,14 +432,25 @@
         async function satirKaydet() {
             let cells = {};
             aktifKolonlar.forEach(kolon => { cells[kolon.name] = document.getElementById(`form_${kolon.name}`).value; });
-            if (düzenlenecekRowId) {
-                await fetch(`${API_URL}/rows/${düzenlenecekRowId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cells }) });
-                formSifirla();
-            } else {
-                await fetch(`${API_URL}/rows`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cells }) });
-                formSifirla();
-            }
-            tabloyuYukle();
+            
+            const method = düzenlenecekRowId ? 'PUT' : 'POST';
+            const url = düzenlenecekRowId ? `${API_URL}/rows/${düzenlenecekRowId}` : `${API_URL}/rows`;
+
+            await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cells }) });
+            formSifirla();
+            setTimeout(tabloyuYukle, 800); // Mailin arkada fırlatılması için minik bir bekleme süresi
+        }
+
+        async function otomasyonEkle() {
+            const body = {
+                triggerColumn: document.getElementById('otoTriggerKolon').value,
+                triggerValue: document.getElementById('otoTriggerDeger').value,
+                condColumn: document.getElementById('otoCondKolon').value,
+                condValue: document.getElementById('otoCondDeger').value,
+                actionPayload: document.getElementById('otoPayload').value
+            };
+            await fetch(`${API_URL}/automations`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            alert("🚀 Otomasyon zincirlendi!");
         }
 
         async function kolonEkle() {
